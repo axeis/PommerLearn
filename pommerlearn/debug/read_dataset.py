@@ -62,7 +62,7 @@ def save_episode_obs_gif(obs_array, filename, verbose=True, fps=10):
 
         return render_obs_step_image(obs_array[step], step)
 
-    imageio.mimsave(filename, [gif_creation_step(step) for step in range(steps)], fps=fps)
+    imageio.mimsave(filename, [gif_creation_step(step) for step in range(steps)], duration=1000/fps)
 
     if verbose:
         print("\rDone")
@@ -70,7 +70,7 @@ def save_episode_obs_gif(obs_array, filename, verbose=True, fps=10):
 
 def main():
     # Note: You have to create that dataset first
-    z = zarr.open('data_0.zr', 'r')
+    z = zarr.open('1M_simple_0.zr', 'r')
 
     print("Info:")
     print(z.info)
@@ -85,7 +85,7 @@ def main():
     print("Environment runs: {}, total agent episodes: {}, last episode is cut {}"
           .format(len(attrs['EpisodeSteps']), len(attrs['AgentSteps']), last_episode_is_cut(z)))
 
-    agent_episode = 0
+    agent_episode = 2
     episode_slice = get_agent_episode_slice(z, agent_episode)
 
     obs = z['obs'][episode_slice]
@@ -113,7 +113,7 @@ def main():
     # plot_obs(ep_0_obs[0])
 
     print("Creating gif of observations")
-    save_episode_obs_gif(obs, "./episode_obs.gif")
+    save_episode_obs_gif(obs, "./episode_obs_2.gif")
 
 
 if __name__ == '__main__':
