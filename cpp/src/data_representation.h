@@ -8,6 +8,7 @@ const int PLANE_COUNT = 23;
 const int PLANE_SIZE = bboard::BOARD_SIZE;
 const int PLANES_TOTAL_FLOATS = PLANE_COUNT * PLANE_SIZE * PLANE_SIZE;
 const int N_POSITION_DEPENDENT_PLANES = 14;
+const int STEP_PLANE_ID = 22;
 
 const int NUM_MOVES = 6;
 extern bool CENTERED_OBSERVATION; // option for centering the observation around the agent
@@ -79,6 +80,8 @@ Scalar Feature Planes:
  * @param centeredView Agent is kept in the middle of the View. Limits the agents view to (board-size-1)/2 tiles.
  */
 void BoardToPlanes(const bboard::Board* board, int id, float* planes);
+
+int8_t GetPhase(const float* planes);
 
 /**
  * @brief InitialStateString Converts an initial state to a string representation. Warning: Has to be the initial state, does not handle bombs or flames.

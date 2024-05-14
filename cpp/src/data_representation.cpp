@@ -210,6 +210,13 @@ inline void _shiftPlanes(const bboard::Board* board, int id, xtPlanesType xtPlan
         
 }       
 
+/**
+ * @brief 
+ * 
+ * @param board the Board to be processed
+ * @param id the ID of the Agent
+ * @param planes Planes to wirte the result to
+ */
 void BoardToPlanes(const bboard::Board* board, int id, float* planes)
 {
     // shape of all planes of a state
@@ -225,6 +232,17 @@ void BoardToPlanes(const bboard::Board* board, int id, float* planes)
     if (CENTERED_OBSERVATION){
         _shiftPlanes(board, id, xtPlanes);
     }
+}
+
+int8_t GetPhase(const float* planes)
+{
+    if ((int)(planes[STEP_PLANE_ID]*799.0f) <= 40)
+    {
+        return 0;
+    } else {
+        return 1;
+    }
+    
 }
 
 std::string InitialStateToString(const bboard::State& state) {

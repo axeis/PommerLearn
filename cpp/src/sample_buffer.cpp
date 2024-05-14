@@ -10,6 +10,8 @@ SampleBuffer::SampleBuffer(const unsigned long capacity) : capacity(capacity), c
     this->pol = new float[this->capacity * NUM_MOVES];
     this->q = new float[this->capacity * NUM_MOVES];
     this->val = new float[this->capacity];
+    this->phase = new int8_t[this->capacity];
+
 }
 
 SampleBuffer::~SampleBuffer() {
@@ -18,6 +20,7 @@ SampleBuffer::~SampleBuffer() {
     delete[] this->pol;
     delete[] this->q;
     delete[] this->val;
+    delete[] this->phase;
 }
 
 ulong SampleBuffer::addSamples(const SampleBuffer& otherBuffer, const ulong offset, const ulong n) {
@@ -28,6 +31,7 @@ ulong SampleBuffer::addSamples(const SampleBuffer& otherBuffer, const ulong offs
     std::copy_n(otherBuffer.pol + NUM_MOVES * offset, NUM_MOVES * numSamples, this->pol + NUM_MOVES * this->count);
     std::copy_n(otherBuffer.q + NUM_MOVES * offset, NUM_MOVES * numSamples, this->q + NUM_MOVES * this->count);
     std::copy_n(otherBuffer.val + offset, numSamples, this->val + this->count);
+    std::copy_n(otherBuffer.phase + offset, numSamples, this->phase + this->count);
 
     this->count += numSamples;
 
@@ -42,6 +46,7 @@ bool SampleBuffer::addSample(const float* planes, const bboard::Move move, const
     std::copy_n(moveProbs, NUM_MOVES, this->pol + NUM_MOVES * this->count);
     std::copy_n(q, NUM_MOVES, this->q + NUM_MOVES * this->count);
     act[count] = int8_t(move);
+    this->phase[count] = GetPhase(planes);
     this->val[count] = val;
     count += 1;
 
@@ -109,6 +114,11 @@ const float* SampleBuffer::getPol() const {
 
 const float* SampleBuffer::getVal() const {
     return this->val;
+}
+
+const int8_t* SampleBuffer::getPhase() const
+{
+    return this->phase;
 }
 
 const float* SampleBuffer::getQ() const {

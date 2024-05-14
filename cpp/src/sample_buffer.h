@@ -67,6 +67,7 @@ public:
     const float* getPol() const;
     const float* getQ() const;
     const float* getVal() const;
+    const int8_t* getPhase() const;
 
     ulong getCount() const;
     ulong getCapacity() const;
@@ -83,6 +84,7 @@ private:
     float* pol;
     float* q;
     float* val;
+    int8_t* phase;
 };
 
 #endif // SAMPLE_BUFFER_H
