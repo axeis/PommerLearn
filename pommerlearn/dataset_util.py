@@ -196,6 +196,18 @@ class PommerDataset(Dataset):
             return_ids=return_ids
         )
 
+    def toZarr(self, path:Path):
+        root= zarr.group()
+        root.array('act', self.act)
+        root.array('obs', self.obs)
+        root.array('pol', self.pol)
+        # TODO: when will q be set
+        # root.array('q', self.q)
+        root.array('val', self.val)
+
+        # TODO: set Attributes
+
+
     def set(self, other_samples, to_index, from_index=0, count: Optional[int] = None, batch_size: Optional[int] = None):
         """
         Sets own_samples[to_index:to_index + count] = other_samples[from_index:from_index + count].
@@ -309,6 +321,36 @@ class PommerDataset(Dataset):
                 return (ret_ids, *sequence)
             else:
                 return sequence
+
+
+    def splitAt(self, idX=40) :
+        """
+        splits the DataSet in Two and returns them
+        """
+
+        # TODO: idX musst be multiple of 4?
+        tail = PommerDataset(
+            obs=self.obs[idX:],
+            val=self.val[idX:],
+            act=self.act[idX:],
+            pol=self.pol[idX:],
+            ids=self.ids[idX:],
+            transform=self.transform,
+            return_ids=self.return_ids,
+            steps_to_end=self.steps_to_end[idX:],
+        )
+        head = PommerDataset(
+            obs=self.obs[:idX-1],
+            val=self.val[:idX-1],
+            act=self.act[:idX-1],
+            pol=self.pol[:idX-1],
+            ids=self.ids[:idX-1],
+            transform=self.transform,
+            return_ids=self.return_ids,
+            steps_to_end=self.steps_to_end[:idX-1],
+        )
+        return head, tail
+
 
     def shuffle(self):
         """
