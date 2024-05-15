@@ -81,13 +81,13 @@ void FileBasedIPCManager::flushSampleBuffer(z5::filesystem::handle::File file) {
     auto valDataset = z5::openDataset(file, "val");
     z5::multiarray::writeSubarray<float>(valDataset, xtVal, valOffset.begin());
 
-    // ohases
+    // phases
 
     std::vector<size_t> phaseShape = { count };
     z5::types::ShapeType phaseOffset = { this->datasetStepCount };
 
     auto xtPhase = xt::adapt(buffer.getPhase(), count, xt::no_ownership(), phaseShape);
-    auto phaseDataset = z5::openDataset(file, "shape");
+    auto phaseDataset = z5::openDataset(file, "phase");
     z5::multiarray::writeSubarray<int8_t>(phaseDataset, xtPhase, phaseOffset.begin());
 
     // remember that we added the samples and clear the buffer
