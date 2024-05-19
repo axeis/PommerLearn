@@ -12,6 +12,7 @@ const int STEP_PLANE_ID = 22;
 
 const int NUM_MOVES = 6;
 extern bool CENTERED_OBSERVATION; // option for centering the observation around the agent
+extern std::string PHASE_DEFINITION; 
 
 inline long GetObsSize(const long step) {
     return step * PLANES_TOTAL_FLOATS;

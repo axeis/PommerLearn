@@ -4,8 +4,8 @@
 #include "xtensor/xadapt.hpp"
 #include <sstream>
 
-
 bool CENTERED_OBSERVATION;
+std::string PHASE_DEFINITION;
 
 float inline _getNormalizedBombStrength(int stength)
 {
@@ -236,13 +236,29 @@ void BoardToPlanes(const bboard::Board* board, int id, float* planes)
 
 int8_t GetPhase(const float* planes)
 {
-    if ((int)(planes[STEP_PLANE_ID]*799.0f) <= 40)
-    {
+    if (PHASE_DEFINITION == "steps") {
+        if ((int)(planes[PLANES_TOTAL_FLOATS - 1] * 799.0f) <= 40){
+            return 0;
+        } else {
+            return 1;
+        }
+    }else if (PHASE_DEFINITION == "mixedness") {
+        //todo
         return 0;
-    } else {
-        return 1;
+    }else if (PHASE_DEFINITION == "living_opponents"){
+        //todo 
+        std::vector<std::size_t> stateShape = { PLANE_COUNT, PLANE_SIZE, PLANE_SIZE };
+        auto xtPlanes = xt::adapt(planes, PLANE_COUNT * PLANE_SIZE * PLANE_SIZE, xt::no_ownership(), stateShape);
+
+        for (size_t i = 0; i < 3; i++) {
+            xt::view(xtPlanes, 20+i);
+        }
+
+        return 0;
     }
-    
+    // für andere definitionen
+    //  xt::adapt
+    //  xt::view
 }
 
 std::string InitialStateToString(const bboard::State& state) {
@@ -260,9 +276,9 @@ std::string InitialStateToString(const bboard::State& state) {
                 case bboard::Item::AGENT1:  stream << "B"; break;
                 case bboard::Item::AGENT2:  stream << "C"; break;
                 case bboard::Item::AGENT3:  stream << "D"; break;
-                default:
+            default:
                     if (bboard::IS_WOOD(elem)) {
-                        int item = state.FlagItem(bboard::WOOD_POWFLAG(elem));
+                    int item = state.FlagItem(bboard::WOOD_POWFLAG(elem));
                         switch (item) {
                             case bboard::EXTRABOMB: stream << "3"; break;
                             case bboard::INCRRANGE: stream << "4"; break;

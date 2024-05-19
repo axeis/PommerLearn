@@ -165,6 +165,7 @@ int main(int argc, char **argv) {
 
             // general options
             ("mode", po::value<std::string>()->default_value("ffa_sl"), "Available modes: ffa_sl, ffa_mcts, team_mcts")
+            ("phase-definition", po::value<std::string>()->default_value("steps"), "Available modes: steps, mixedness, living_opponents")
             ("print", "If set, print the current state of the environment in every step.")
             ("print-first-last", "If set, print the first and last environment state of each episode.")
 
@@ -264,6 +265,7 @@ int main(int argc, char **argv) {
     config.useVirtualStep = configVals.count("virtual-step") > 0;
     config.trackStats = configVals.count("track-stats") > 0;
     CENTERED_OBSERVATION = configVals.count("centered-observation") > 0;
+    PHASE_DEFINITION = configVals["phase-definition"].as<std::string>();
 
     // search parameters
     searchSettings.mctsSolver = configVals["mctsSolver"].as<bool>();
