@@ -165,7 +165,7 @@ int main(int argc, char **argv) {
 
             // general options
             ("mode", po::value<std::string>()->default_value("ffa_sl"), "Available modes: ffa_sl, ffa_mcts, team_mcts")
-            ("phase-definition", po::value<std::string>()->default_value("steps"), "Available modes: steps, mixedness, living_opponents")
+            ("phase-definition", po::value<std::string>()->default_value("living_opponents"), "Available modes: steps, mixedness, living_opponents")
             ("print", "If set, print the current state of the environment in every step.")
             ("print-first-last", "If set, print the first and last environment state of each episode.")
 

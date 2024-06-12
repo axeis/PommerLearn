@@ -2,7 +2,8 @@
 
 #include "xtensor/xview.hpp"
 #include "xtensor/xadapt.hpp"
-#include <sstream>
+#include <iostream>
+#include <xtensor/xio.hpp>
 
 bool CENTERED_OBSERVATION;
 std::string PHASE_DEFINITION;
@@ -243,22 +244,31 @@ int8_t GetPhase(const float* planes)
             return 1;
         }
     }else if (PHASE_DEFINITION == "mixedness") {
-        //todo
-        return 0;
-    }else if (PHASE_DEFINITION == "living_opponents"){
-        //todo 
+        // todo: differentiate between ffa and team
         std::vector<std::size_t> stateShape = { PLANE_COUNT, PLANE_SIZE, PLANE_SIZE };
         auto xtPlanes = xt::adapt(planes, PLANE_COUNT * PLANE_SIZE * PLANE_SIZE, xt::no_ownership(), stateShape);
+        for (int i = 0; i < 3; i++)
+        {
+            auto opponentSlice = xt::view(xtPlanes, 11+i);
 
-        for (size_t i = 0; i < 3; i++) {
-            xt::view(xtPlanes, 20+i);
+        }
+        
+        return 0;
+    }else if (PHASE_DEFINITION == "living_opponents"){
+        //todo check for game mode and apply only for actual opponent in team mode
+        std::vector<std::size_t> stateShape = { PLANE_COUNT, PLANE_SIZE, PLANE_SIZE };
+        auto xtPlanes = xt::adapt(planes, PLANE_COUNT * PLANE_SIZE * PLANE_SIZE, xt::no_ownership(), stateShape);
+        
+        int opponentCount = 0;
+
+        for (int i = 0; i < 3; i++) {
+            auto opponentSlice = xt::view(xtPlanes, xt::keep(19+i), xt::all(), xt::all());
+            if (opponentSlice(0,0,0) == 1) opponentCount++;
         }
 
-        return 0;
+        return 4-opponentCount;
     }
-    // für andere definitionen
-    //  xt::adapt
-    //  xt::view
+ 
 }
 
 std::string InitialStateToString(const bboard::State& state) {
@@ -277,7 +287,7 @@ std::string InitialStateToString(const bboard::State& state) {
                 case bboard::Item::AGENT2:  stream << "C"; break;
                 case bboard::Item::AGENT3:  stream << "D"; break;
             default:
-                    if (bboard::IS_WOOD(elem)) {
+                                if (bboard::IS_WOOD(elem)) {
                     int item = state.FlagItem(bboard::WOOD_POWFLAG(elem));
                         switch (item) {
                             case bboard::EXTRABOMB: stream << "3"; break;
