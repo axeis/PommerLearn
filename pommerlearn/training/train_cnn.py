@@ -8,7 +8,6 @@ Basic training script to replicate behaviour of baseline agent
 """
 import os
 from typing import Optional
-import zarr
 
 import torch.nn as nn
 from torch.autograd import Variable
