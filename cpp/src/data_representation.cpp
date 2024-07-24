@@ -272,6 +272,10 @@ int8_t GetPhase(const float *planes)
         {
             auto view = xt::view(xtPlanes, 11+i, xt::all(), xt::all());
             auto opponentView = xt::reshape_view(view, {11, 11});
+            //Todo: das ausprobieren
+            // auto opponentView = xt::squeeze(view, {0});
+            
+
 
             // auto shape = opponentView.shape();
             // std::cout << "Shape of the view: (";
@@ -282,6 +286,7 @@ int8_t GetPhase(const float *planes)
             //     }
             // }
             // std::cout << ")" << std::endl;
+
             size_t y;
             for (size_t x = 0; x < PLANE_SIZE; x++)
             {
