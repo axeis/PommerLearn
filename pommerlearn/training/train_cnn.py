@@ -8,6 +8,7 @@ Basic training script to replicate behaviour of baseline agent
 """
 import os
 from typing import Optional
+import zarr
 
 import torch.nn as nn
 from torch.autograd import Variable
@@ -34,6 +35,8 @@ from training.lr_schedules.lr_schedules import CosineAnnealingSchedule, LinearWa
 from dataset_util import create_data_loaders, log_dataset_stats, get_last_dataset_path
 from training.metrics import Metrics
 from training.train_util import rm_dir
+import dask.array as da
+
 
 
 def create_model(train_config):
@@ -76,6 +79,15 @@ def create_optimizer(model: nn.Module, train_config: dict):
 
 
 
+def train_phases(train_config):
+    z = zarr.open(train_config["dataset_path"])
+    
+    for i in range(2):
+        phaseDask = da.from_(z, chunks=z.chunks)
+
+
+
+
 def train_cnn(train_config):
     set_default_cuda_device(train_config)
     if "device" in train_config:
@@ -90,7 +102,7 @@ def train_cnn(train_config):
     input_shape, model = create_model(train_config)
     model = model.to(device)
 
-    train_sequence_length = train_config["sequence_length"] if model.is_stateful else None
+    train_sequence_length = train_config[ "sequence_length"] if model.is_stateful else None
 
     train_loader, val_loader = create_data_loaders(
         train_config["dataset_path"],
@@ -613,6 +625,7 @@ def fill_default_config(train_config):
         # output
         "output_dir": "./model-sl",
         "model_batch_sizes": [1, 8],
+
         # hyperparameters
         "discount_factor": 1.0,
         "mcts_val_weight": None,  # None or in [0, 1]
@@ -664,7 +677,13 @@ def fill_default_config(train_config):
 
 if __name__ == '__main__':
     # you can insert your custom config here
+
+
+
     train_cnn(fill_default_config({
-        # "dataset_path": "1M_simple_0.zr",
-        # "test_size": 0.01,
+        "dataset_path": "1M_simple_1_phase_0.zr",
+        "test_size": 0.01,
+        "device": 3,
+                # phases
+        # "phase_definition": "mixedness",
     }))
