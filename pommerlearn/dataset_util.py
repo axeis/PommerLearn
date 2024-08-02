@@ -164,7 +164,10 @@ class PommerDataset(Dataset):
 
         return PommerDataset(
             obs=z['obs'][:z_steps],
-            val=get_value_target(z, discount_factor, mcts_val_weight),
+            # Todo: make conditional
+            # splitting will already calculate the val. If run without splitting val muss be calculated here
+            # val=get_value_target(z, discount_factor, mcts_val_weight),
+            val=z['val'][:z_steps],
             act=z['act'][:z_steps],
             pol=pol,
             ids=get_unique_agent_episode_id(z),
