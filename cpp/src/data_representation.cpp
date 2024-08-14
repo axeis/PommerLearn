@@ -336,7 +336,7 @@ int8_t GetPhase(const float *planes)
                 livingCount++;
         }
 
-        return 4 - livingCount;
+        return 3 - livingCount;
     }
 }
 
