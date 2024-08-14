@@ -106,6 +106,20 @@ def train_cnn(train_config):
         train_sampling_mode=train_config["train_sampling_mode"], test_split_mode=train_config["test_split_mode"]
     )
 
+    additional_val_loaders = []
+    if "additional_validation_sets" in train_config:
+        for path in train_config["additional_validation_sets"]:
+            discarded_train_loader, val_loader = create_data_loaders(
+                path,
+                train_config["discount_factor"], train_config["mcts_val_weight"],
+                train_config["test_size"], train_config["batch_size"], train_config["batch_size_test"],
+                train_transform=train_config["dataset_train_transform"], sequence_length=train_sequence_length,
+                num_workers=train_config["num_workers"], only_test_last=train_config["only_test_last"],
+                train_sampling_mode=train_config["train_sampling_mode"], test_split_mode=train_config["test_split_mode"]
+            )
+            additional_val_loaders.append(val_loader)
+
+
     optimizer = create_optimizer(model, train_config)
 
     model_input_dir = None if train_config["torch_input_dir"] is None else Path(train_config["torch_input_dir"])
@@ -136,7 +150,8 @@ def train_cnn(train_config):
                                    value_loss, policy_loss, train_config["value_loss_ratio"],
                                    train_loader, val_loader, device, log_dir, global_step=global_step_start,
                                    batches_until_eval=train_config["batches_until_eval"],
-                                   train_ratio=train_config["train_ratio"])
+                                   train_ratio=train_config["train_ratio"], 
+                                   additional_val_loaders=additional_val_loaders if additional_val_loaders else None)
 
     base_dir = Path(train_config["output_dir"])
     batch_sizes = train_config["model_batch_sizes"]
@@ -328,7 +343,7 @@ def export_as_script_module(model, batch_size, dummy_input, dir) -> None:
 
 def run_training(model: PommerModel, nb_epochs, optimizer, lr_schedule, momentum_schedule, value_loss, policy_loss,
                  value_loss_ratio, train_loader, val_loader, device, log_dir, global_step=0,
-                 batches_until_eval: Optional[int] = 100, train_ratio: Optional[float] = None):
+                 batches_until_eval: Optional[int] = 100, train_ratio: Optional[float] = None, additional_val_loaders: Optional[List] = None ):
     """
     Trains a given model for a number of epochs
 
@@ -348,6 +363,7 @@ def run_training(model: PommerModel, nb_epochs, optimizer, lr_schedule, momentum
     :param batches_until_eval: Number of batches between evaluations of the current model. The model will also be
                                evaluated at the end.
     :param train_ratio: If given, training for each epoch stops after reading train_ratio of all batches
+    :param additional_val_loaders: If given the Model will be evaluated against these datasets too
     :return: global_step after training
     """
 
@@ -357,6 +373,12 @@ def run_training(model: PommerModel, nb_epochs, optimizer, lr_schedule, momentum
     writer_train = SummaryWriter(log_dir=log_dir)
     if val_loader is not None:
         writer_val = SummaryWriter(log_dir=log_dir + "-val")
+
+    if additional_val_loaders is not None:
+        additional_wirters = []
+        for i, loader in enumerate(additional_val_loaders):
+            writer = SummaryWriter(log_dir=log_dir + "-val-" + str(i))
+            additional_wirters.append(writer)
 
     # TODO: Nested progress bars would be ideal
     if train_ratio is None:
@@ -425,6 +447,17 @@ def run_training(model: PommerModel, nb_epochs, optimizer, lr_schedule, momentum
                 # log aggregated train stats
                 m_train.log_to_tensorboard(writer_train, global_step)
                 m_train.reset()
+
+                if additional_val_loaders is not None:
+                    model.eval()
+                    for loader, writer in zip(additional_val_loaders, additional_wirters):
+                        if model.is_stateful:
+                            val = get_stateful_val_loss(model, value_loss_ratio, value_loss, policy_loss, device,
+                                                      loader)
+                        else:
+                            val = get_val_loss(model, value_loss_ratio, value_loss, policy_loss, device, loader)
+
+                        val.log_to_tensorboard(writer, global_step)
 
                 if val_loader is not None:
                     model.eval()
@@ -674,9 +707,13 @@ if __name__ == '__main__':
 
 
     train_cnn(fill_default_config({
-        "dataset_path": "1M_simple_1_phase_0.zr",
-        "test_size": 0.01,
-        "device": 3,
-                # phases
-        # "phase_definition": "mixedness",
+        "dataset_path": "3M_living_1_phase_3.zr",
+        "device": 4,
+        "tensorboard_comment": '3M living phase 2',
+        "additional_validation_sets": [
+            "1M_living_0_phase_1.zr",
+            "1M_living_0_phase_2.zr",
+            "1M_living_0_phase_3.zr",
+            # "1M_living_0.zr",
+        ],  
     }))
