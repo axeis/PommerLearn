@@ -109,7 +109,7 @@ def train_cnn(train_config):
     additional_val_loaders = []
     if "additional_validation_sets" in train_config:
         for path in train_config["additional_validation_sets"]:
-            discarded_train_loader, val_loader = create_data_loaders(
+            discarded_train_loader, add_val_loader = create_data_loaders(
                 path,
                 train_config["discount_factor"], train_config["mcts_val_weight"],
                 train_config["test_size"], train_config["batch_size"], train_config["batch_size_test"],
@@ -117,7 +117,7 @@ def train_cnn(train_config):
                 num_workers=train_config["num_workers"], only_test_last=train_config["only_test_last"],
                 train_sampling_mode=train_config["train_sampling_mode"], test_split_mode=train_config["test_split_mode"]
             )
-            additional_val_loaders.append(val_loader)
+            additional_val_loaders.append(add_val_loader)
 
 
     optimizer = create_optimizer(model, train_config)
@@ -486,6 +486,9 @@ def run_training(model: PommerModel, nb_epochs, optimizer, lr_schedule, momentum
     writer_train.close()
     if val_loader is not None:
         writer_val.close()
+    if additional_val_loaders is not None:
+        for writer in additional_wirters:
+           writer.close()
 
     # make sure to empty cache
     if torch.cuda.is_available():
@@ -657,12 +660,12 @@ def fill_default_config(train_config):
         "mcts_val_weight": None,  # None or in [0, 1]
         "train_sampling_mode": "complete",  # "complete", "weighted_steps_to_end", "weighted_actions"
         "policy_loss_argmax_target": False,
-        "optimizer": "adamw",
+        "optimizer": "sgd", # "sgd"", "adamw"
         "min_lr": 0.0001,
         "max_lr": 0.001,
         "min_momentum": 0.8,
         "max_momentum": 0.95,
-        "schedule": "constant",  # "cosine_annealing", "one_cycle", "constant"
+        "schedule": "one_cycle",  # "cosine_annealing", "one_cycle", "constant"
         "weight_decay": 1e-04,
         "value_loss_ratio": 0.1,
         "test_size": 0.2,
