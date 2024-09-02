@@ -267,28 +267,19 @@ int8_t GetPhase(const float *planes)
         auto xtPlanes = xt::adapt(planes, PLANE_COUNT * PLANE_SIZE * PLANE_SIZE, xt::no_ownership(), stateShape);
 
         std::vector<std::pair<std::size_t, std::size_t>> indices;
-
-        for (int i = 0; i < 3; i++)
+        
+        assert(indices.size() == 0);
+        int i;
+        size_t x, y;
+        auto viewa = xt::view(xtPlanes, 10+i, xt::all(), xt::all());
+        auto opponentViewa = xt::reshape_view(viewa, {11, 11});
+        for (i = 0; i <= 3; i++)
         {
-            auto view = xt::view(xtPlanes, 11+i, xt::all(), xt::all());
+            auto view = xt::view(xtPlanes, 10+i, xt::all(), xt::all());
             auto opponentView = xt::reshape_view(view, {11, 11});
-            //Todo: das ausprobieren
-            // auto opponentView = xt::squeeze(view, {0});
+
             
-
-
-            // auto shape = opponentView.shape();
-            // std::cout << "Shape of the view: (";
-            // for (std::size_t i = 0; i < shape.size(); ++i) {
-            //     std::cout << shape[i];
-            //     if (i < shape.size() - 1) {
-            //     std::cout << ", ";
-            //     }
-            // }
-            // std::cout << ")" << std::endl;
-
-            size_t y;
-            for (size_t x = 0; x < PLANE_SIZE; x++)
+            for (x = 0; x < PLANE_SIZE; x++)
             {
                 for (y = 0; y < PLANE_SIZE; y++)
                 {
@@ -302,14 +293,18 @@ int8_t GetPhase(const float *planes)
                     break;
             }
         }
+
+        assert(indices.size() >= 1);
         // Check if winning 
-        if (indices.size() < 1) return 2;
+        if (indices.size() == 1) return 2;
+
+        assert(indices.size() >= 2);
         
         int minManhattanDistance = PLANE_SIZE + PLANE_SIZE;
-        for (size_t i = 1; i < 4; i++)
+        for (size_t i = 1; i <= indices.size()-1 ; i++)
         {
-            int manhattanDistance = abs(indices[0].first - indices[i].first) +
-                                    abs(indices[0].second - indices[i].second); 
+            int manhattanDistance = abs(indices.at(0).first - indices.at(i).first) +
+                                    abs(indices.at(0).second - indices.at(i).second); 
             if (manhattanDistance < minManhattanDistance)
             {
                 minManhattanDistance = manhattanDistance;
