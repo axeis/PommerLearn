@@ -7,9 +7,19 @@ MCTSCrazyAraAgent::MCTSCrazyAraAgent(const std::string& modelDirectory, const in
     this->playSettings = playSettings;
     this->searchSettings = searchSettings;
     this->searchLimits = searchLimits;
-    this->singleNet = load_network(modelDirectory, deviceID);
-    this->netBatches = load_network_batches(modelDirectory, deviceID, searchSettings);
-    agent = std::make_unique<MCTSAgent>(this->singleNet.get(), this->netBatches, &this->searchSettings, &this->playSettings);
+    this->netSingleVector.clear();
+    for (const auto& entry : fs::directory_iterator(modelDirectory)) {
+        unique_ptr<NeuralNetAPI> netSingleTemp = load_network(entry.path().generic_string(), deviceID);
+        netSingleTemp->validate_neural_network();
+        vector<unique_ptr<NeuralNetAPI>> netBatchesTemp = load_network_batches(modelDirectory, deviceID, searchSettings);
+        netBatchesTemp.front()->validate_neural_network();
+
+        this->netSingleVector.push_back(std::move(netSingleTemp));
+        this->netBatchesVector.push_back(std::move(netBatchesTemp));
+
+    }
+    
+    agent = std::make_unique<MCTSAgent>(this->netSingleVector, this->netBatchesVector, &this->searchSettings, &this->playSettings);
 }
 
 vector<unique_ptr<NeuralNetAPI>> MCTSCrazyAraAgent::load_network_batches(const string& modelDirectory, const int deviceID, const SearchSettings& searchSettings)
@@ -163,7 +173,7 @@ void MCTSCrazyAraAgent::update_planning_agents()
 
 bool MCTSCrazyAraAgent::has_stateful_model()
 {
-    return singleNet->has_auxiliary_outputs();
+    return netSingleVector.at(0)->has_auxiliary_outputs();
 }
 
 crazyara::Agent* MCTSCrazyAraAgent::get_acting_agent()
@@ -173,7 +183,8 @@ crazyara::Agent* MCTSCrazyAraAgent::get_acting_agent()
 
 NeuralNetAPI* MCTSCrazyAraAgent::get_acting_net()
 {
-    return singleNet.get();
+    //TODO will not perform MOE 
+    return netSingleVector.at(0).get();
 }
 
 void MCTSCrazyAraAgent::reset()

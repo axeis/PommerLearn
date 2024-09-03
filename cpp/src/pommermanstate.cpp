@@ -690,6 +690,13 @@ void PommermanState::init(int variant, bool isChess960)
     // TODO
 }
 
+GamePhase PommermanState::get_phase(unsigned int numPhases, GamePhaseDefinition gamePhaseDefinietion) const
+{
+    // TODO
+    return 0;
+    
+}
+
 void PommermanState::print(std::ostream& os) const
 {
     // TODO

@@ -11,6 +11,8 @@
 #include "rawnetagent.h"
 #include "mctsagent.h"
 #include "aggregate.h"
+#include <filesystem>
+namespace fs = std::filesystem;
 
 #ifdef TENSORRT
 #include "nn/tensorrtapi.h"
@@ -136,7 +138,7 @@ public:
 
     /**
      * @brief add_results_to_buffer Stores the search result in a buffer for later look-up
-     * @param net Neural net object
+     * @param netVector Neural netVector object
      * @param bestAction Best found action after the search
      */
     void add_results_to_buffer(const NeuralNetAPI* net, bboard::Move bestAction);
@@ -144,8 +146,9 @@ public:
 
 struct RawNetAgentContainer {
     std::unique_ptr<RawNetAgent> agent;
-    std::unique_ptr<NeuralNetAPI> net;
+    vector<std::unique_ptr<NeuralNetAPI>> netVector;
     std::unique_ptr<PlaySettings> playSettings;
+    std::unique_ptr<SearchSettings> searchSettings;
 };
 
 /**
@@ -194,8 +197,8 @@ class MCTSCrazyAraAgent : public CrazyAraAgent
 {
 private:
     std::unique_ptr<MCTSAgent> agent;
-    std::unique_ptr<NeuralNetAPI> singleNet;
-    vector<std::unique_ptr<NeuralNetAPI>> netBatches;
+    vector<std::unique_ptr<NeuralNetAPI>> netSingleVector;
+    vector<vector<std::unique_ptr<NeuralNetAPI>>> netBatchesVector;
 
     SearchSettings searchSettings;
     const std::string modelDirectory;

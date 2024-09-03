@@ -25,10 +25,17 @@ std::unique_ptr<SafePtrQueue<RawNetAgentContainer>> RawCrazyAraAgent::load_raw_n
         auto container = std::make_unique<RawNetAgentContainer>();
         // agent uses default playsettings, are not used anyway
         container->playSettings = std::make_unique<PlaySettings>();
-        // load the network
-        container->net = load_network(modelDirectory, deviceID);
+        // default searchSettings // TODO check with Feilx
+        container->searchSettings = std::make_unique<SearchSettings>();
+        // load the networks
+        for (const auto& entry : fs::directory_iterator(modelDirectory)) {
+            unique_ptr<NeuralNetAPI> netSingleTemp = load_network(entry.path().generic_string(), deviceID);
+            netSingleTemp->validate_neural_network();
+
+            container->netVector.push_back(std::move(netSingleTemp));
+        }
         // .. and create a new agent (this creates a new NeuralNetAPIUser and allocates VRAM)
-        container->agent = std::make_unique<RawNetAgent>(container->net.get(), container->playSettings.get(), false);
+        container->agent = std::make_unique<RawNetAgent>(container->netVector, container->playSettings.get(), false, container->searchSettings.get());
 
         // add the container to the queue -> can be used by threads
         netQueue->enqueue(std::move(container));
@@ -40,7 +47,7 @@ std::unique_ptr<SafePtrQueue<RawNetAgentContainer>> RawCrazyAraAgent::load_raw_n
 bool RawCrazyAraAgent::has_stateful_model()
 {
     auto rawNetAgent = rawNetAgentQueue->dequeue();
-    bool statefulModel = rawNetAgent->net->has_auxiliary_outputs();
+    bool statefulModel = rawNetAgent->netVector.at(0)->has_auxiliary_outputs();
     rawNetAgentQueue->enqueue(std::move(rawNetAgent));
     return statefulModel;
 }
@@ -76,7 +83,7 @@ crazyara::Agent* RawCrazyAraAgent::get_acting_agent()
 NeuralNetAPI* RawCrazyAraAgent::get_acting_net()
 {
     if (currentAgent) {
-        return currentAgent->net.get();
+        return currentAgent->netVector.at(0).get();
     }
 
     return nullptr;

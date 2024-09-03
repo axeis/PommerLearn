@@ -199,6 +199,8 @@ public:
     void set_auxiliary_outputs(const float* auxiliaryOutputs) override;
     PommermanState* clone() const override;
     void init(int variant, bool isChess960) override;
+    GamePhase get_phase(unsigned int numPhases, GamePhaseDefinition gamePhaseDefinition) const override;
+
 };
 
 #endif // POMMERMANSTATE_H
