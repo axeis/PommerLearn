@@ -10,7 +10,7 @@ lib/
 local_lib_copy_*.so
 pommerlearn/1M_simple_0.zr.zip
 build1vs1/
-
+data/
 
 # ignore zarr files and folders
 *.zr

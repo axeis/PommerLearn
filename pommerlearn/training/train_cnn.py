@@ -695,7 +695,7 @@ def fill_default_config(train_config):
         "global_step": 0,
         "batches_until_eval": 100,
         # training
-        "num_workers": 4
+        "num_workers": 8
     }
 
     for key in train_config:
