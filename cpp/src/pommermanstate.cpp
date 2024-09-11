@@ -54,9 +54,9 @@ int _get_closest_opponent(const bboard::State* state, const int id)
             continue;
         }
 
-        int hamming = abs(self.x - other.x) + abs(self.y - other.y);
-        if (hamming < closestDistance) {
-            closestDistance = hamming;
+        int manhattan = abs(self.x - other.x) + abs(self.y - other.y);
+        if (manhattan < closestDistance) {
+            closestDistance = manhattan;
             closestOpponent = i;
         }
     }
@@ -690,10 +690,49 @@ void PommermanState::init(int variant, bool isChess960)
     // TODO
 }
 
-GamePhase PommermanState::get_phase(unsigned int numPhases, GamePhaseDefinition gamePhaseDefinietion) const
-{
-    // TODO
-    return 0;
+GamePhase PommermanState::get_phase(unsigned int numPhases, GamePhaseDefinition gamePhaseDefinition) const
+{        
+    const bboard::AgentInfo& self = state.agents[agentID];
+    int closestDistance = bboard::BOARD_SIZE * 2;
+    
+    
+    switch (gamePhaseDefinition)
+    {
+    case MIXEDNES:
+        for (int i = 0; i < bboard::AGENT_COUNT; i++) {
+            if (i == agentID) {
+                continue;
+            }
+            const bboard::AgentInfo& other = state.agents[i];
+            if (other.dead || !self.IsEnemy(other)) {
+                continue;
+            }
+
+            int manhattan = abs(self.x - other.x) + abs(self.y - other.y);
+            if (manhattan < closestDistance) {
+                closestDistance = manhattan;
+            }
+        }
+
+        if (closestDistance < 4) return 2;
+        if (closestDistance < 7) return 1;
+        return 0;
+        break;
+        
+    case STEPS:
+        if (state.timeStep < 40 ) return 0;
+        return 1;
+        break;
+
+    case LIVING_OPPONENTS:
+        return 4 - state.aliveAgents;
+        break;
+
+    default:
+        break;
+    }
+
+    return -1;
     
 }
 

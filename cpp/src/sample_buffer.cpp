@@ -46,7 +46,7 @@ bool SampleBuffer::addSample(const float* planes, const bboard::Move move, const
     std::copy_n(moveProbs, NUM_MOVES, this->pol + NUM_MOVES * this->count);
     std::copy_n(q, NUM_MOVES, this->q + NUM_MOVES * this->count);
     act[count] = int8_t(move);
-    this->phase[count] = GetPhase(planes);
+    //this->phase[count] = GetPhase(planes);
     this->val[count] = val;
     count += 1;
 

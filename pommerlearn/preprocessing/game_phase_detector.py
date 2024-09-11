@@ -22,7 +22,7 @@ def get_phase_vector(z, phase_definition="mixedness"):
         # assert phases[i] == z['phase'][i], (f"calculated {phases[i]}, while previously it was {z['phase'][i]} at {i}")
 
 
-    print (np.sum(phases == z['phase']))
+    z['phase'] = phases
 
 
 def get_game_phase(observation, phase_definition):
