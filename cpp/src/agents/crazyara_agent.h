@@ -58,6 +58,8 @@ protected:
 
     bboard::Environment* env = nullptr;
 
+    bool modelIsStateful;
+
 public:
     OnlineAggregate eval_time_ms;
     OnlineAggregate eval_depth;

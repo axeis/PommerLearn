@@ -84,7 +84,9 @@ void tourney(const std::string& modelDir, const int deviceID, RunnerConfig confi
 
     // for now, just use the same observation parameters for opponents
     bboard::ObservationParameters opponentObsParams = config.observationParameters;
-    crazyAraAgent->init_state(config.gameMode, config.observationParameters, opponentObsParams, config.useVirtualStep, config.trackStats);
+    //TODO will not work with RawNetAgent
+    ((MCTSCrazyAraAgent*)crazyAraAgent.get())->init_state(config.gameMode, config.observationParameters, opponentObsParams, config.useVirtualStep, config.trackStats);
+    // crazyAraAgent->init_state(config.gameMode, config.observationParameters, opponentObsParams, config.useVirtualStep, config.trackStats);
 
     std::array<bboard::Agent*, bboard::AGENT_COUNT> agents;
     
@@ -138,6 +140,21 @@ void tourney(const std::string& modelDir, const int deviceID, RunnerConfig confi
     }
     */
 } 
+
+GamePhaseDefinition stringToGamePhase(const std::string& str){
+static const std::unordered_map<std::string, GamePhaseDefinition> phaseMap = {
+        {"mixedness", MIXEDNESS},
+        {"steps", STEPS},
+        {"living_opponents", LIVING_OPPONENTS}
+    };
+
+    auto it = phaseMap.find(str);
+    if (it != phaseMap.end()){
+        return it->second;
+    } else {
+        return STEPS;
+    }
+}
 
 inline void setDefaultFFAConfig(RunnerConfig &config) {
     config.gameMode = bboard::GameMode::FreeForAll;
@@ -274,6 +291,7 @@ int main(int argc, char **argv) {
     searchSettings.nodePolicyTemperature = configVals["nodePolicyTemperature"].as<float>();
     searchSettings.qVetoDelta = configVals["qVetoDelta"].as<float>();
     searchSettings.qValueWeight = configVals["qValueWeight"].as<float>();
+    searchSettings.gamePhaseDefinition = stringToGamePhase(configVals["phase-definition"].as<std::string>());
 
     int deviceID = configVals["gpu"].as<int>();
     int switchDepth = configVals["switch-depth"].as<int>();
