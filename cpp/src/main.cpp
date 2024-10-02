@@ -145,6 +145,7 @@ GamePhaseDefinition stringToGamePhase(const std::string& str){
 static const std::unordered_map<std::string, GamePhaseDefinition> phaseMap = {
         {"mixedness", MIXEDNESS},
         {"steps", STEPS},
+        {"none", NONE},
         {"living_opponents", LIVING_OPPONENTS}
     };
 
@@ -182,7 +183,7 @@ int main(int argc, char **argv) {
 
             // general options
             ("mode", po::value<std::string>()->default_value("ffa_sl"), "Available modes: ffa_sl, ffa_mcts, team_mcts")
-            ("phase-definition", po::value<std::string>()->default_value("mixedness"), "Available modes: steps, mixedness, living_opponents")
+            ("phase-definition", po::value<std::string>()->default_value("mixedness"), "Available modes: steps, mixedness, living_opponents, none")
             ("print", "If set, print the current state of the environment in every step.")
             ("print-first-last", "If set, print the first and last environment state of each episode.")
 

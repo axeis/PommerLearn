@@ -696,11 +696,12 @@ GamePhase PommermanState::get_phase(unsigned int numPhases, GamePhaseDefinition 
     int closestDistance = bboard::BOARD_SIZE * 2;
     
     
-    //HACK!!!
-    return 0;
+
 
     switch (gamePhaseDefinition)
     {
+    case NONE:
+        return 0;
     case MIXEDNESS:
         for (int i = 0; i < bboard::AGENT_COUNT; i++) {
             if (i == agentID) {
@@ -717,8 +718,8 @@ GamePhase PommermanState::get_phase(unsigned int numPhases, GamePhaseDefinition 
             }
         }
 
-        if (closestDistance < 4) return 2;
-        if (closestDistance < 7) return 1;
+        if (closestDistance < 3) return 2;
+        if (closestDistance < 6) return 1;
         return 0;
         break;
         
