@@ -333,6 +333,8 @@ int8_t GetPhase(const float *planes)
 
         return 3 - livingCount;
     }
+
+    return -1;
 }
 
 std::string InitialStateToString(const bboard::State &state)
