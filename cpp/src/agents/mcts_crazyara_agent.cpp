@@ -81,6 +81,7 @@ SearchSettings MCTSCrazyAraAgent::get_default_search_settings(const bool selfPla
     }
     searchSettings.reuseTree = false;
     searchSettings.mctsSolver = false;
+    searchSettings.searchPlayerMode = MODE_SINGLE_PLAYER;
     return searchSettings;
 }
 
