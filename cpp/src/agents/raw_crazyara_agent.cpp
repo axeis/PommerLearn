@@ -6,8 +6,8 @@ RawCrazyAraAgent::RawCrazyAraAgent(std::shared_ptr<SafePtrQueue<RawNetAgentConta
     this->rawNetAgentQueue = rawNetAgentQueue;
 }
 
-RawCrazyAraAgent::RawCrazyAraAgent(const std::string& modelDirectory, const int deviceID): 
-    RawCrazyAraAgent(load_raw_net_agent_queue(modelDirectory, 1, deviceID)) {}
+RawCrazyAraAgent::RawCrazyAraAgent(const std::string& modelDirectory, SearchSettings searchSettings, int deviceID): 
+    RawCrazyAraAgent(load_raw_net_agent_queue(modelDirectory, searchSettings, 1, deviceID)) {}
 
 bboard::Move RawCrazyAraAgent::act(const bboard::Observation *obs)
 {
@@ -17,7 +17,7 @@ bboard::Move RawCrazyAraAgent::act(const bboard::Observation *obs)
     return move;
 }
 
-std::unique_ptr<SafePtrQueue<RawNetAgentContainer>> RawCrazyAraAgent::load_raw_net_agent_queue(const std::string& modelDirectory, int count, int deviceID)
+std::unique_ptr<SafePtrQueue<RawNetAgentContainer>> RawCrazyAraAgent::load_raw_net_agent_queue(const std::string& modelDirectory, SearchSettings searchSettings, int count, int deviceID)
 {
     auto netQueue = std::make_unique<SafePtrQueue<RawNetAgentContainer>>();
 
@@ -26,10 +26,11 @@ std::unique_ptr<SafePtrQueue<RawNetAgentContainer>> RawCrazyAraAgent::load_raw_n
         // agent uses default playsettings, are not used anyway
         container->playSettings = std::make_unique<PlaySettings>();
         // default searchSettings // TODO check with Feilx
-        container->searchSettings = std::make_unique<SearchSettings>();
+        container->searchSettings = std::make_unique<SearchSettings>(searchSettings);
         // load the networks
+
         for (const auto& entry : fs::directory_iterator(modelDirectory)) {
-            unique_ptr<NeuralNetAPI> netSingleTemp = load_network(entry.path().generic_string(), deviceID);
+            unique_ptr<NeuralNetAPI> netSingleTemp = load_network(entry.path().generic_string(), deviceID, container->searchSettings.get()->batchSize);
             netSingleTemp->validate_neural_network();
 
             container->netVector.push_back(std::move(netSingleTemp));

@@ -159,10 +159,54 @@ void CrazyAraAgent::reset() {
     pommermanState->hasValidState = false;
 }
 
-std::unique_ptr<NeuralNetAPI> CrazyAraAgent::load_network(const std::string& modelDirectory, const int deviceID)
+void CrazyAraAgent::fill_single_nn_vector(const string& modelDirectory, vector<unique_ptr<NeuralNetAPI>>& netSingleVector, 
+                                            vector<vector<unique_ptr<NeuralNetAPI>>>& netBatchesVector, const SearchSettings& searchSettings, const int deviceID)
+{
+    unique_ptr<NeuralNetAPI> netSingleTmp = load_network(modelDirectory, deviceID, 1);
+    netSingleTmp->validate_neural_network();
+    netSingleVector.push_back(std::move(netSingleTmp));
+
+    size_t idx = 0;
+    for (int deviceId = deviceID; deviceId <= deviceID; ++deviceId) {
+        for (size_t i = 0; i < size_t(searchSettings.threads); ++i) {
+            unique_ptr<NeuralNetAPI> netBatchesTmp = load_network(modelDirectory, deviceId, searchSettings.batchSize);
+            netBatchesTmp->validate_neural_network();
+            netBatchesVector[idx].push_back(std::move(netBatchesTmp));
+            ++idx;
+        }
+    }
+}
+
+void CrazyAraAgent::fill_nn_vectors(const string& modelDirectory, vector<unique_ptr<NeuralNetAPI>>& netSingleVector, vector<vector<unique_ptr<NeuralNetAPI>>>& netBatchesVector, const SearchSettings& searchSettings, const int deviceID)
+{
+    netSingleVector.clear();
+    netBatchesVector.clear();
+    // threads is the first dimension, the phase are the 2nd dimension
+    netBatchesVector.resize(searchSettings.threads * 1);
+
+    // early return if no phases are used
+    for (const auto& entry : fs::directory_iterator(modelDirectory)) {
+        if (!fs::is_directory(entry.path())) {
+            fill_single_nn_vector(modelDirectory, netSingleVector, netBatchesVector, searchSettings, deviceID);
+            return;
+        }
+        else {
+            break;
+        }
+    }
+
+    // analyse directory to get num phases
+    for (const auto& entry : fs::directory_iterator(modelDirectory)) {
+        std::cout << entry.path().generic_string() << std::endl;
+
+        fill_single_nn_vector(entry.path().generic_string(), netSingleVector, netBatchesVector, searchSettings, deviceID);
+    }
+}
+
+std::unique_ptr<NeuralNetAPI> CrazyAraAgent::load_network(const std::string& modelDirectory, const int deviceID, unsigned int batchSize)
 {
 #ifdef TENSORRT
-    return std::make_unique<TensorrtAPI>(deviceID, 1, modelDirectory, "float32");
+    return std::make_unique<TensorrtAPI>(deviceID, batchSize, modelDirectory, "float32");
 #elif defined (TORCH)
     return std::make_unique<TorchAPI>("cpu", 0, 1, modelDirectory);
 #endif

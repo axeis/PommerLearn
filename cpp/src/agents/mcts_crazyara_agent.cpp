@@ -10,28 +10,11 @@ MCTSCrazyAraAgent::MCTSCrazyAraAgent(const std::string& modelDirectory, const in
     this->netSingleVector.clear();
     vector<unique_ptr<NeuralNetAPI>> tempNetVector;
     
-    for (const auto& entry : fs::directory_iterator(modelDirectory)) {
-        unique_ptr<NeuralNetAPI> netSingleTemp = load_network(entry.path().generic_string(), deviceID);
-        netSingleTemp->validate_neural_network();
-        vector<unique_ptr<NeuralNetAPI>> netBatchesTemp = load_network_batches(entry.path().generic_string(), deviceID, searchSettings);
-        netBatchesTemp.front()->validate_neural_network();
-       
+    fill_nn_vectors(modelDirectory, this->netSingleVector, this->netBatchesVector, this->searchSettings, this->deviceID);
 
-        this->netSingleVector.push_back(std::move(netSingleTemp));
-        this->netBatchesVector.push_back(std::move(netBatchesTemp));
-
-        /* 
-        later on this wrapper needs to access the networks. CrazyAra currently does not allow this.
-        this ist a workaround to save a copy in this scope while CrazyAra takes Ownership of its own
-        */ 
-        netSingleTemp = load_network(entry.path().generic_string(), deviceID);
-        tempNetVector.push_back(std::move(netSingleTemp));
-        
-
-    }
-    // check for stateful because netSingleVector is empty after next call
+    //check for stateful because netSingleVector is empty after next call
     this->modelIsStateful = netSingleVector.at(0)->has_auxiliary_outputs();
-    agent = std::make_unique<MCTSAgent>(tempNetVector, this->netBatchesVector, &this->searchSettings, &this->playSettings);
+    agent = std::make_unique<MCTSAgent>(netSingleVector, this->netBatchesVector, &this->searchSettings, &this->playSettings);
 }
 
 vector<unique_ptr<NeuralNetAPI>> MCTSCrazyAraAgent::load_network_batches(const string& modelDirectory, const int deviceID, const SearchSettings& searchSettings)
@@ -111,7 +94,7 @@ void MCTSCrazyAraAgent::update_planning_agents()
             throw std::runtime_error("Cannot use planningAgentType RawNetworkAgent with empty model directory.");
         }
 
-        rawNetAgentQueue = RawCrazyAraAgent::load_raw_net_agent_queue(modelDirectory, searchSettings.threads, deviceID);
+        rawNetAgentQueue = RawCrazyAraAgent::load_raw_net_agent_queue(modelDirectory, searchSettings, searchSettings.threads, deviceID);
     }
 
     for (int i = 0; i < bboard::AGENT_COUNT; i++) {

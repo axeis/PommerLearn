@@ -91,7 +91,7 @@ public:
      * @param modelDirectory The model directory
      * @return A NeuralNetAPI instance for the model
      */
-    static std::unique_ptr<NeuralNetAPI> load_network(const std::string& modelDirectory, const int deviceID);
+    static std::unique_ptr<NeuralNetAPI> load_network(const std::string& modelDirectory, const int deviceID, unsigned int batchSize);
 
     /**
      * @brief Get a pointer to the crazyara agent that is used in act (warning: only well-defined within act)
@@ -117,6 +117,22 @@ public:
     // bboard::Agent
     bboard::Move act(const bboard::Observation* obs) override;
     void reset() override;
+
+    /**
+     * @brief fill_single_nn_vector Fills a single phase in netSingleVector and netBatchesVector with a loaded neural network.
+     * @param modelDirectory Model directory where the .onnx file is stored.
+     * @param netSingleVector Vector of neural networks with batch-size 1
+     * @param netBatchesVector Vector of neural networks with batch-size > 1
+     */
+    void fill_single_nn_vector(const string& modelDirectory, vector<unique_ptr<NeuralNetAPI>>& netSingleVector, vector<vector<unique_ptr<NeuralNetAPI>>>& netBatchesVector, const SearchSettings& searchSettings, const int deviceID);
+
+    /**
+     * @brief fill_nn_vectors Fills the given neural network vectors with loaded neural network models.
+     * @param modelDirectory Model directory where the .onnx file is stored.
+     * @param netSingleVector Vector of neural networks with batch-size 1
+     * @param netBatchesVector Vector of neural networks with batch-size > 1
+     */
+    void fill_nn_vectors(const string& modelDirectory, vector<unique_ptr<NeuralNetAPI>>& netSingleVector, vector<vector<unique_ptr<NeuralNetAPI>>>& netBatchesVector, const SearchSettings& searchSettings, const int deviceID);
 
     virtual ~CrazyAraAgent() {}
 
@@ -164,7 +180,7 @@ private:
 
 public:
     RawCrazyAraAgent(std::shared_ptr<SafePtrQueue<RawNetAgentContainer>> rawNetAgentQueue);
-    RawCrazyAraAgent(const std::string& modelDirectory, const int deviceID);
+    RawCrazyAraAgent(const std::string& modelDirectory, SearchSettings searchSettings, const int deviceID);
 
     bboard::Move act(const bboard::Observation* obs) override;
 
@@ -175,7 +191,7 @@ public:
      * @param count The number of agents in the queue
      * @return new queue containing size RawNetAgentContainers
      */
-    static std::unique_ptr<SafePtrQueue<RawNetAgentContainer>> load_raw_net_agent_queue(const std::string& modelDirectory, int count, const int deviceID);
+    static std::unique_ptr<SafePtrQueue<RawNetAgentContainer>> load_raw_net_agent_queue(const std::string& modelDirectory, SearchSettings searchSettings, int count, const int deviceID);
 
     // CrazyAraAgent
     bool has_stateful_model() override;

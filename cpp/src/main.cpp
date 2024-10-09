@@ -74,7 +74,7 @@ void tourney(const std::string& modelDir, const int deviceID, RunnerConfig confi
     std::unique_ptr<CrazyAraAgent> crazyAraAgent;
     if (useRawNet)
     {
-        crazyAraAgent = std::make_unique<RawCrazyAraAgent>(modelDir, deviceID);
+        crazyAraAgent = std::make_unique<RawCrazyAraAgent>(modelDir, searchSettings, deviceID);
     }
     else {
         PlaySettings playSettings;
@@ -84,8 +84,8 @@ void tourney(const std::string& modelDir, const int deviceID, RunnerConfig confi
 
     // for now, just use the same observation parameters for opponents
     bboard::ObservationParameters opponentObsParams = config.observationParameters;
-    //TODO will not work with RawNetAgent
-    ((MCTSCrazyAraAgent*)crazyAraAgent.get())->init_state(config.gameMode, config.observationParameters, opponentObsParams, config.useVirtualStep, config.trackStats);
+    //TODO check if this works with RawNetAgent
+    crazyAraAgent->init_state(config.gameMode, config.observationParameters, opponentObsParams, config.useVirtualStep, config.trackStats);
     // crazyAraAgent->init_state(config.gameMode, config.observationParameters, opponentObsParams, config.useVirtualStep, config.trackStats);
 
     std::array<bboard::Agent*, bboard::AGENT_COUNT> agents;
@@ -96,7 +96,7 @@ void tourney(const std::string& modelDir, const int deviceID, RunnerConfig confi
     std::shared_ptr<SafePtrQueue<RawNetAgentContainer>> rawNetAgentQueue;
     if ((firstOpponentType == "RawNetAgent" && firstOpponentTypeProbability > 0) || (secondOpponentType == "RawNetAgent" && firstOpponentTypeProbability < 1)) {
         // we might need raw network agents => load the network for them. We only need one network as they are evaluated sequentially
-        rawNetAgentQueue = RawCrazyAraAgent::load_raw_net_agent_queue(modelDir, 1, deviceID);
+        rawNetAgentQueue = RawCrazyAraAgent::load_raw_net_agent_queue(modelDir, searchSettings, 1, deviceID);
     }
 
     std::vector<std::unique_ptr<Clonable<bboard::Agent>>> clones;
