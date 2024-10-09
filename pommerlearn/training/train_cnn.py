@@ -23,6 +23,7 @@ import numpy as np
 import torch
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
+from rtpt.rtpt import RTPT
 from pathlib import Path
 from torch.optim.optimizer import Optimizer
 
@@ -343,7 +344,8 @@ def export_as_script_module(model, batch_size, dummy_input, dir) -> None:
 
 def run_training(model: PommerModel, nb_epochs, optimizer, lr_schedule, momentum_schedule, value_loss, policy_loss,
                  value_loss_ratio, train_loader, val_loader, device, log_dir, global_step=0,
-                 batches_until_eval: Optional[int] = 100, train_ratio: Optional[float] = None, additional_val_loaders: Optional[List] = None ):
+                 batches_until_eval: Optional[int] = 100, train_ratio: Optional[float] = None,
+                 additional_val_loaders: Optional[List] = None ):
     """
     Trains a given model for a number of epochs
 
@@ -386,6 +388,9 @@ def run_training(model: PommerModel, nb_epochs, optimizer, lr_schedule, momentum
     else:
         assert 0 <= train_ratio <= 1, f"Invalid train ratio {train_ratio}."
         total_len = int(train_ratio * len(train_loader)) * nb_epochs
+
+    rtpt = RTPT(name_initials="ME", experiment_name='Pommer', max_iterations=total_len/batches_until_eval)
+    rtpt.start()
 
     progress = tqdm(total=total_len, smoothing=0)
 
@@ -443,6 +448,8 @@ def run_training(model: PommerModel, nb_epochs, optimizer, lr_schedule, momentum
                 # log last lr and momentum
                 writer_train.add_scalar('Hyperparameter/Learning Rate', lr, global_step)
                 writer_train.add_scalar('Hyperparameter/Momentum', momentum, global_step)
+
+                rtpt.step(subtitle=f"loss={m_train.combined_loss():2.2f}")
 
                 # log aggregated train stats
                 m_train.log_to_tensorboard(writer_train, global_step)
@@ -708,15 +715,19 @@ if __name__ == '__main__':
     # you can insert your custom config here
 
 
+    
 
     train_cnn(fill_default_config({
-        "dataset_path": "3M_living_1_phase_3.zr",
-        "device": 4,
-        "tensorboard_comment": '3M living phase 2',
-        "additional_validation_sets": [
-            "1M_living_0_phase_1.zr",
-            "1M_living_0_phase_2.zr",
-            "1M_living_0_phase_3.zr",
-            # "1M_living_0.zr",
-        ],  
+        "dataset_path": "/PommerLearn/data/samples/living_opponent/5M_simple_0_phase_2.zr",
+        "device": 15,
+        "tensorboard_comment": '5M living_opponent phase 2',
+        "nb_epochs": 12,
+        "output_dir": '/PommerLearn/data/model/living_opponent/phase_2',
+
+        # "additional_validation_sets": [
+        #     "1M_living_0_phase_1.zr",
+        #     "1M_living_0_phase_2.zr",
+        #     "1M_living_0_phase_3.zr",
+        #     "1M_living_0.zr",
+        # ],  
     }))
